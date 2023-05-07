@@ -15,6 +15,9 @@ namespace 加密程序
     {
         string filePath;
         string fileName;
+        int fileCount;
+
+        string[] filePaths;
         public Form1()
         {
             InitializeComponent();
@@ -47,6 +50,13 @@ catch (FormatException)
     // 如果textBox1.Text不能够成功解析为整数，则提示用户输入正确的密码格式
 }
             */
+            //判断 label 的 Text 属性是否为空
+            if (string.IsNullOrEmpty(textBox1.Text))
+            {
+                // 执行操作
+                MessageBox.Show("喂，密钥忘了输了你，你开玩笑呢。");
+                return;
+            }
 
             string currentDirectory = Directory.GetCurrentDirectory();// 获取当前程序所在目录
             int password = int.Parse(textBox1.Text);
@@ -85,7 +95,8 @@ catch (FormatException)
                 {
                     // 写入解密密钥内容
                     writer.WriteLine();
-                    writer.Write(currentTime+"    "+password);
+                    writer.Write("选择了1个文件");
+                    writer.Write(currentTime + "    " + password + "    " + filePath);
                 }
 
                 label2.Text = "已输出到程序目录文件下";
@@ -94,12 +105,15 @@ catch (FormatException)
                 {
                 // 处理异常
                 label2.Text = "失败";
+                MessageBox.Show($"文件 {filePath} 加密失败，错误信息：{ex.Message}");
             }
 
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
+            button1.Visible = true;
+            button5.Visible = false;
             // 弹出文件选择对话框
             var dialog = new System.Windows.Forms.OpenFileDialog();
             dialog.Filter = "所有秘密（期待|*.*";
@@ -149,6 +163,87 @@ catch (FormatException)
             {
                 e.Handled = true;
                 label5.Text = "只能是整数";
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            button1.Visible = false;
+            button5.Visible = true;
+            // 弹出文件选择对话框
+            var dialog = new System.Windows.Forms.OpenFileDialog();
+            dialog.Filter = "所有秘密（期待|*.*";
+            dialog.Multiselect = true;
+            dialog.Title = "选择你的小秘密（嘿嘿";
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                filePaths = dialog.FileNames;
+                fileCount = dialog.FileNames.Length;
+                label4.Text = "已选择" + fileCount+"个文件";
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            //判断 label 的 Text 属性是否为空
+            if (string.IsNullOrEmpty(textBox1.Text))
+            {
+                // 执行操作
+                MessageBox.Show("喂，密钥忘了输了你，你开玩笑呢。");
+                return;
+            }
+
+            string currentDirectory = Directory.GetCurrentDirectory();// 获取当前程序所在目录
+            int password = int.Parse(textBox1.Text);
+            // 遍历每个文件，对其进行加密操作
+            foreach (string filePath in filePaths)
+            {
+                try
+                {
+                    fileName = Path.GetFileName(filePath);
+                    // 读取文件内容到字节数组中
+                    byte[] buffer = File.ReadAllBytes(filePath);
+
+                    // 如果文件大小超过2GB，则不进行加密处理
+                    if (buffer.Length > (2L * 1024 * 1024 * 1024 - 2))
+                    {
+                        MessageBox.Show("文件超过2GB，太大了，吃不消，建议发给我我帮你加密。");
+                        continue;
+                    }
+
+                    // 遍历字节数组中的每个字节，对其进行加密操作
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        buffer[i] = (byte)(buffer[i] ^ password); // 将字节与数字进行异或运算
+                    }
+
+                    // 将加密后的字节数组写回到原始文件中
+                    File.WriteAllBytes(System.IO.Path.Combine(currentDirectory, fileName), buffer);
+
+                    // 设置输出文件路径
+                    string outputPath = "output.txt";
+
+                    // 获取当前时间
+                    string currentTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    // 创建并打开输出文件
+                    using (StreamWriter writer = new StreamWriter(outputPath, true))
+                    {
+                        // 写入解密密钥内容
+                        writer.WriteLine();
+                        writer.Write("选择了"+fileCount+"个文件");
+                        writer.Write(currentTime + "    " + password + "    " + filePath);
+                    }
+
+                    //MessageBox.Show($"文件 {filePath} 加密成功！");
+                    label2.Text = filePath+"已输出到程序目录文件下";
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常
+                    MessageBox.Show($"文件 {filePath} 加密失败，错误信息：{ex.Message}");
+                }
             }
         }
     }
