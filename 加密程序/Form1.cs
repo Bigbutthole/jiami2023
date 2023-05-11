@@ -153,7 +153,7 @@ catch (FormatException)
 
         private void button3_Click(object sender, EventArgs e)
         {
-            Close();
+            timer1.Start();
         }
 
         private void textBox1_KeyPress_1(object sender, KeyPressEventArgs e)
@@ -244,6 +244,19 @@ catch (FormatException)
                     // 处理异常
                     MessageBox.Show($"文件 {filePath} 加密失败，错误信息：{ex.Message}");
                 }
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (this.Opacity >= 0.025)
+            {
+                this.Opacity -= 0.025;
+            }
+            else
+            {
+                timer1.Stop();
+                this.Close();
             }
         }
     }
